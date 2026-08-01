@@ -12,6 +12,7 @@ import {
 import { useLogout } from "@/services/api/auth/logout";
 import { ImageComponent } from "@/components/ui/image";
 import { useGetProfile } from "@/services/api/sso/profile/use-get-profile";
+import defaultAvatar from "@/assets/images/users/avatar-1.jpg";
 
 const ProfileDropdown: React.FC = () => {
   const [isProfileDropdown, setIsProfileDropdown] = useState(false);
@@ -39,7 +40,7 @@ const ProfileDropdown: React.FC = () => {
 
   const name = data?.data?.name || session?.user?.name || "User";
   const username = data?.data?.username || session?.user?.email?.split("@")[0] || "user";
-  const avatar = data?.data?.avatar || "/assets/images/users/avatar-1.jpg";
+  const avatar = data?.data?.avatar || defaultAvatar;
 
   return (
     <React.Fragment>
