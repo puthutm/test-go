@@ -35,7 +35,7 @@ func RunAutoSeeder(db *gorm.DB, log *logrus.Logger) {
 		&model.MstClassLecturer{},
 		&model.MstClassParticipant{},
 		&model.MstStudentBio{},
-		&model.MstSksLimit{},
+		&model.MstSKSLimit{},
 		&model.MstValueScale{},
 		&model.MstValueComposition{},
 	)
