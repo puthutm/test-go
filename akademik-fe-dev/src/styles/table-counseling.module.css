@@ -1,0 +1,42 @@
+.p_24 {
+  padding: 24px;
+}
+.mt_24 {
+  margin-top: 24px;
+}
+
+.mb_12 {
+  margin-bottom: 12px;
+}
+.mb_24 {
+  margin-bottom: 24px;
+}
+
+.headingGrey {
+  font-size: 12px;
+  font-weigth: 600;
+  color: #909090;
+}
+
+.fSize14 {
+  font-size: 14px;
+}
+
+.h_25 {
+  height: 25px;
+}
+
+.w_100 {
+  width: 100%;
+}
+
+.btn_dokumen {
+  padding: 5px 8px 5px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #44a7ff;
+  border: none;
+  border-radius: 4px;
+  color: white;
+}

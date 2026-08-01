@@ -1,0 +1,37 @@
+stages:
+  #- build
+  - test
+ # - build
+  - deploy
+
+test:
+  stage: test
+  script:
+    - ssh techteam@$DEV_MACHINE "docker ps && exit"
+  only:
+    - dev
+#  when: manual
+
+# build:
+#   stage: build
+#   script:
+#     - echo "Meningkatkan counter dan build aplikasi"
+#     - ./tag-be.sh
+#     - grep '^COUNTER=' .env
+#   only:
+#     - dev
+
+
+deploy:
+  stage: deploy
+  # before_script:
+  #   - eval $(ssh-agent -s)
+  #   - ssh-add <(echo "$SSH_PRIVATE_KEY")
+  #   - mkdir -p ~/.ssh
+  #   - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - ssh techteam@$DEV_MACHINE "cd /home/techteam/data-referensi-be && ./tag-be.sh && git pull https://oauth2:$ACCESS_TOKEN@gitlab.unsia.ac.id/icems/data-referensi-be.git dev && docker-compose down && docker-compose up --build -d && docker-compose logs && cd /home/techteam && ./prune_volumes_docker.sh && exit"
+  only:
+    - dev
+#   environment: production
+#   when: manual

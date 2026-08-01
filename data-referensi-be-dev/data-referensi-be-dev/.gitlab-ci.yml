@@ -1,0 +1,193 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  TAG_LATEST: $PRIVATE_REGISTRY_URL/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME-latest
+  TAG_COMMIT: $PRIVATE_REGISTRY_URL/$CI_PROJECT_PATH:$CI_COMMIT_SHORT_SHA
+  CONTAINER_NAME: svc-data_referensi
+
+# ========================
+# BUILD JOB
+# ========================
+build:
+  tags:
+    - shell-ex01
+  image: docker:20.10.7-dind
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - if [ "$CI_COMMIT_BRANCH" = "dev" ]; then printf "%s\n" "$ENV_DEV" > .env; fi
+    - if [ "$CI_COMMIT_BRANCH" = "staging" ]; then printf "%s\n" "$ENV_STAGING" > .env; fi
+    - if [ "$CI_COMMIT_BRANCH" = "main" ]; then printf "%s\n" "$ENV_PROD" > .env; fi
+    - printf "%s\n" "$PUBLIC_KEY_BE" > public_key.pem
+    - printf "%s\n" "$PRIVATE_KEY_BE" > private_key.pem
+    - printf "%s\n" "$NETRC" > .netrc
+    - chmod 600 .netrc
+    - chmod 600 private_key.pem
+  script:
+    - unset DOCKER_HOST
+    - docker build -t "$TAG_COMMIT" -t "$TAG_LATEST" .
+    - echo "$PRIVATE_REGISTRY_PASSWORD" | docker login -u "$PRIVATE_REGISTRY_USERNAME" --password-stdin "$PRIVATE_REGISTRY_URL"
+    - docker push "$TAG_COMMIT"
+    - docker push "$TAG_LATEST"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - when: never
+
+# ========================
+# TEST JOB
+# ========================
+test:
+  tags:
+    - shell-ex01
+  image: docker:20.10.7-dind
+  stage: test
+  services:
+    - docker:dind
+  script:
+    - unset DOCKER_HOST
+    - echo "$PRIVATE_REGISTRY_PASSWORD" | docker login -u "$PRIVATE_REGISTRY_USERNAME" --password-stdin "$PRIVATE_REGISTRY_URL"
+    - docker pull "$TAG_LATEST"
+    - docker rm -f test-svc-data_referensi || true
+    - docker run -d -p 9001:9000 --name test-svc-data_referensi "$TAG_LATEST"
+    - docker ps
+    - docker rm -f test-svc-sso || true
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ========================
+# DEPLOY TEMPLATE
+# ========================
+.deploy_template:
+  stage: deploy
+  tags:
+    - runner-unsia
+  before_script:
+    - 'which ssh || ( apt-get update -y && apt-get install openssh-client -y )'
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - SSH_KEY_VALUE="$(printenv "$TARGET_SSH_KEY_VAR")"
+    - printf "%s\n" "$SSH_KEY_VALUE" | tr -d '\r' > ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+    - test -s ~/.ssh/deploy_key || (echo "SSH key kosong"; exit 1)
+    - ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null || (echo "SSH private key tidak valid"; exit 1)
+  script: |
+   if [ "$CI_COMMIT_BRANCH" = "main" ]; then ENV_SELECTED="$ENV_PROD"; fi
+    if [ "$CI_COMMIT_BRANCH" = "dev" ]; then ENV_SELECTED="$ENV"; fi
+    if [ "$CI_COMMIT_BRANCH" = "staging" ]; then ENV_SELECTED="$ENV_STAGING"; fi
+
+    test -n "$ENV_SELECTED" || (echo "ENV GitLab kosong"; exit 1)
+
+    ENV_B64="$(printf "%s" "$ENV_SELECTED" | base64 | tr -d '\n')"
+
+    ssh -i ~/.ssh/deploy_key \
+      -o IdentitiesOnly=yes \
+      -o BatchMode=yes \
+      -o StrictHostKeyChecking=no \
+      -o UserKnownHostsFile=/dev/null \
+      techteam@$TARGET_MACHINE "
+        set -e
+
+        echo 'Login ke private registry...'
+        echo '$PRIVATE_REGISTRY_PASSWORD' | docker login -u '$PRIVATE_REGISTRY_USERNAME' --password-stdin '$PRIVATE_REGISTRY_URL'
+
+        echo 'Masuk ke folder deploy aplikasi...'
+        cd '$DEPLOY_PATH'
+
+        echo 'Hapus .env lama jika ada...'
+        rm -f '$ENV_FILE_PATH'
+
+        echo 'Buat .env baru dari GitLab Variables...'
+        printf '%s' '$ENV_B64' | base64 -d > '$ENV_FILE_PATH'
+
+        echo 'Set permission .env...'
+        chmod 600 '$ENV_FILE_PATH'
+
+        echo 'Cek .env...'
+        test -s '$ENV_FILE_PATH' || (echo '.env gagal dibuat'; exit 1)
+
+        echo 'Stop container lama berdasarkan nama jika ada...'
+        docker stop '$CONTAINER_NAME' || true
+
+        echo 'Stop container lain yang memakai port 9010 jika ada...'
+        PORT_CONTAINER=\$(docker ps -q --filter 'publish=9010' || true)
+
+        if [ -n \"\$PORT_CONTAINER\" ]; then
+          echo 'Container lain yang memakai port 9010 ditemukan. Stop dulu...'
+          docker stop \$PORT_CONTAINER || true
+        fi
+
+        echo 'Rename image lama...'
+        ./rename_images.sh || true
+
+        echo 'Hapus container lama jika ada...'
+        docker rm -f '$CONTAINER_NAME' || true
+
+        echo 'Pull image terbaru...'
+        docker pull '$TAG_LATEST'
+
+        echo 'Jalankan container baru...'
+        docker run -d -p 9010:3000 --env-file '$ENV_FILE_PATH' --name '$CONTAINER_NAME' '$TAG_LATEST'
+
+        echo 'Cek container...'
+        docker ps -a --filter name='$CONTAINER_NAME'
+
+        echo 'Cek port...'
+        docker port '$CONTAINER_NAME' || true
+
+        echo 'Cek log container...'
+        docker logs --tail=100 '$CONTAINER_NAME' || true
+
+        echo 'Cleanup image lama...'
+        ./rm-images.sh || true
+
+        echo 'Deploy selesai.'
+      "
+
+# ========================
+# DEPLOY JOB - DEV
+# ========================
+deploy_dev:
+  extends: .deploy_template
+  variables:
+    TARGET_MACHINE: $DEV_MACHINE
+    TARGET_SSH_KEY_VAR: SSH_PRIVATE_KEY
+    DEPLOY_PATH: /home/techteam/env/data_referensi-be
+    ENV_FILE_PATH: /home/techteam/env/deploy/.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+# ========================
+# DEPLOY JOB - STAGING
+# ========================
+deploy_staging:
+  extends: .deploy_template
+  variables:
+    TARGET_MACHINE: $DEV_MACHINE_STAGING
+    TARGET_SSH_KEY_VAR: SSH_STAGING_PRIVATE_KEY
+    DEPLOY_PATH: /home/techteam/portainer/data_referensi-be
+    ENV_FILE_PATH: /home/techteam/env/deploy/.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+
+# ========================
+# DEPLOY JOB - PROD
+# ========================
+deploy_main:
+  extends: .deploy_template
+  variables:
+    TARGET_MACHINE: $DEV_MACHINE_PROD
+    TARGET_SSH_KEY_VAR: SSH_PROD_PRIVATE_KEY
+    DEPLOY_PATH: /home/techteam/env/data_referensi-be
+    ENV_FILE_PATH: /home/techteam/env/deploy/.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: manual

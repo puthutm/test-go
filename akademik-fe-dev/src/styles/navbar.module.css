@@ -1,0 +1,68 @@
+.nav_item {
+  color: #909090;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.2px;
+}
+
+.nav_item:hover {
+  color: #10487a;
+}
+
+.nav_active {
+  color: #10487a;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  letter-spacing: 0.2px;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: auto;
+  text-underline-offset: auto;
+  text-underline-position: from-font;
+}
+
+.nav_profile {
+  display: flex;
+  width: 180px;
+  align-items: center;
+  gap: 13px;
+  flex-shrink: 0;
+  margin-left: auto;
+  order: 2;
+}
+
+.nav_profile img {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 82.5px;
+  /* background: url(<path-to-image>) lightgray 50% / cover no-repeat; */
+}
+
+.profile_wrapper {
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 140%; /* 19.6px */
+  max-width: 124px;
+  overflow-y: hidden;
+}
+
+.profile_wrapper > .profile_name {
+  color: #212529;
+  text-align: start;
+}
+
+.profile_wrapper > .profile_nim {
+  color: #9599ad;
+  text-align: start;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 140%; /* 19.6px */
+}

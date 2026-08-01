@@ -1,0 +1,13 @@
+root = "."
+
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o tmp/main.exe ./cmd/akademic"
+bin = "tmp/main.exe"
+
+[logger]
+time = true
+
+[watcher]
+includes = ["**/*.go", "**/*.html"]

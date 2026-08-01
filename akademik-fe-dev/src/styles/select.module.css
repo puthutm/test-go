@@ -1,0 +1,95 @@
+.control_base_style {
+  border: 1px solid;
+  height: 37px;
+}
+
+.icon_padding {
+  padding-left: calc(0.9rem * 3) !important;
+}
+
+.placeholder {
+  color: #595a65;
+}
+
+.control_base {
+  border: 1px solid #ced4da;
+  padding-inline: 16px 8px;
+  border-radius: 4px;
+  height: 37px;
+}
+
+.control_base:hover {
+  border: 1px solid #cad4de;
+}
+
+.control_disabled {
+  border: 1px solid #ced4da;
+  background-color: #eff2f7 !important;
+  height: 37px;
+}
+
+.control_focus {
+  border: 1px solid #cad4de;
+}
+
+.container {
+  height: 37px;
+}
+
+.options {
+  z-index: 100;
+  padding: 8px;
+}
+
+.options:hover {
+  background-color: #25a0e2 !important;
+  color: white;
+}
+
+.clear_indicator {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.clear_indicator:hover {
+  background-color: #d73c3c;
+  color: white;
+}
+
+.menu {
+  margin-top: 4px;
+  background-color: white;
+  font-size: 14px;
+  z-index: 50;
+  overflow: hidden;
+  border: 1px solid #eaedf0;
+  border-radius: 4px;
+}
+
+.multi_value {
+  border: 1px solid #eaedf0;
+  border-radius: 4px;
+  align-items: center;
+  padding-block: 0.6px;
+  padding-left: 4px;
+  padding-right: 2px;
+  gap: 6px;
+  background-color: #25a0e2;
+  color: white;
+  width: fit-content;
+}
+
+.multi_value_label {
+  padding-block: 2px;
+  padding-inline: 4px;
+}
+
+.multi_value_remove {
+  color: inherit;
+  border-radius: 4px;
+  margin-right: 1px;
+}
+
+.multi_value_remove:hover {
+  background-color: #d73c3c;
+}

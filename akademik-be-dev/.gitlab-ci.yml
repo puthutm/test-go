@@ -1,0 +1,189 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  TAG_LATEST: $PRIVATE_REGISTRY_URL/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME-latest
+  TAG_COMMIT: $PRIVATE_REGISTRY_URL/$CI_PROJECT_PATH:$CI_COMMIT_SHORT_SHA
+  CONTAINER_NAME: svc-akademik
+  APP_PORT: 9040
+  APP_INTERNAL_PORT: 9000
+
+# ========================
+# BUILD JOB
+# ========================
+build:
+  tags:
+    - shell-ex01
+  image: docker:20.10.7-dind
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - printf "%s\n" "$NETRC" > .netrc
+    - chmod 600 .netrc
+    - if [ "$CI_COMMIT_BRANCH" = "dev" ]; then printf "%s\n" "$ENV_DEV" > .env; fi
+    - if [ "$CI_COMMIT_BRANCH" = "staging" ]; then printf "%s\n" "$ENV_STAGING" > .env; fi
+    - if [ "$CI_COMMIT_BRANCH" = "main" ]; then printf "%s\n" "$ENV_PROD" > .env; fi
+    - test -f .env || (echo "File .env tidak terbentuk. Cek ENV_DEV, ENV_STAGING, atau ENV_PROD."; exit 1)
+    - printf "%s\n" "$PUBLIC_KEY_BE" > public_key.pem
+    - printf "%s\n" "$PRIVATE_KEY_BE" > private_key.pem
+  script:
+    - unset DOCKER_HOST
+    - docker build -t "$TAG_COMMIT" -t "$TAG_LATEST" .
+    - echo "$PRIVATE_REGISTRY_PASSWORD" | docker login -u "$PRIVATE_REGISTRY_USERNAME" --password-stdin "$PRIVATE_REGISTRY_URL"
+    - docker push "$TAG_COMMIT"
+    - docker push "$TAG_LATEST"
+  after_script:
+    - echo "Cleaning up dangling images..."
+    - docker image prune -f
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - when: never
+
+# ========================
+# TEST JOB
+# ========================
+test:
+  tags:
+    - shell-ex01
+  image: docker:20.10.7-dind
+  stage: test
+  services:
+    - docker:dind
+  script:
+    - unset DOCKER_HOST
+    - echo "$PRIVATE_REGISTRY_PASSWORD" | docker login -u "$PRIVATE_REGISTRY_USERNAME" --password-stdin "$PRIVATE_REGISTRY_URL"
+    - docker pull "$TAG_LATEST"
+    - docker rm -f test-svc-akademik || true
+    - docker run -d -p 3001:9000 --name test-svc-akademik "$TAG_LATEST"
+    - docker ps
+    - docker rm -f test-svc-akademik || true
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - when: never
+
+# ========================
+# DEPLOY TEMPLATE
+# ========================
+.deploy_template:
+  stage: deploy
+  tags:
+    - runner-unsia
+  before_script:
+    - "which ssh || ( apt-get update -y && apt-get install openssh-client -y )"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - SSH_KEY_VALUE="$(printenv "$TARGET_SSH_KEY_VAR")"
+    - test -n "$SSH_KEY_VALUE" || (echo "SSH key variable kosong"; exit 1)
+    - printf "%s\n" "$SSH_KEY_VALUE" | tr -d '\r' > ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+  script: |
+    if [ "$CI_COMMIT_BRANCH" = "dev" ]; then ENV_SELECTED="$ENV_DEV"; fi
+    if [ "$CI_COMMIT_BRANCH" = "staging" ]; then ENV_SELECTED="$ENV_STAGING"; fi
+    if [ "$CI_COMMIT_BRANCH" = "main" ]; then ENV_SELECTED="$ENV_PROD"; fi
+
+    test -n "$ENV_SELECTED" || (echo "ENV GitLab kosong"; exit 1)
+    test -n "$ENV_FILE_PATH" || (echo "ENV_FILE_PATH kosong"; exit 1)
+    test -n "$TARGET_MACHINE" || (echo "TARGET_MACHINE kosong"; exit 1)
+    test -n "$DEPLOY_PATH" || (echo "DEPLOY_PATH kosong"; exit 1)
+
+    ENV_B64="$(printf "%s" "$ENV_SELECTED" | base64 | tr -d '\n')"
+
+    ssh -i ~/.ssh/deploy_key \
+      -o IdentitiesOnly=yes \
+      -o BatchMode=yes \
+      -o StrictHostKeyChecking=no \
+      -o UserKnownHostsFile=/dev/null \
+      techteam@$TARGET_MACHINE "
+        set -e
+
+        echo 'Login ke private registry...'
+        echo '$PRIVATE_REGISTRY_PASSWORD' | docker login -u '$PRIVATE_REGISTRY_USERNAME' --password-stdin '$PRIVATE_REGISTRY_URL'
+
+        echo 'Masuk ke folder deploy...'
+        cd '$DEPLOY_PATH'
+
+        echo 'Tulis file environment...'
+        mkdir -p \$(dirname '$ENV_FILE_PATH')
+        printf '%s' '$ENV_B64' | base64 -d > '$ENV_FILE_PATH'
+
+        echo 'Stop container lain yang memakai port $APP_PORT jika ada...'
+        PORT_CONTAINER=\$(docker ps -q --filter 'publish=$APP_PORT' || true)
+
+        if [ -n \"\$PORT_CONTAINER\" ]; then
+          echo 'Container lain yang memakai port $APP_PORT ditemukan. Stop dulu...'
+          docker stop \$PORT_CONTAINER || true
+        fi
+
+        echo 'Rename image lama...'
+        ./rename_images.sh || true
+
+        echo 'Hapus container lama jika ada...'
+        docker rm -f '$CONTAINER_NAME' || true
+
+        echo 'Pull image terbaru...'
+        docker pull '$TAG_LATEST'
+
+        echo 'Jalankan container baru...'
+        docker run -d \
+          -p '$APP_PORT:$APP_INTERNAL_PORT' \
+          --env-file '$ENV_FILE_PATH' \
+          --name '$CONTAINER_NAME' \
+          --restart unless-stopped \
+          '$TAG_LATEST'
+
+        echo 'Cleanup image lama...'
+        ./rm-images.sh || true
+
+        echo 'Deploy selesai.'
+      "
+
+# ========================
+# DEPLOY JOB - DEV
+# ========================
+deploy_dev:
+  extends: .deploy_template
+  variables:
+    TARGET_MACHINE: $DEV_MACHINE
+    TARGET_SSH_KEY_VAR: SSH_PRIVATE_KEY
+    DEPLOY_PATH: /home/techteam/env/akademik-be
+    ENV_FILE_PATH: /home/techteam/env/akademik-be/.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - when: never
+
+# ========================
+# DEPLOY JOB - STAGING
+# ========================
+deploy_staging:
+  extends: .deploy_template
+  variables:
+    TARGET_MACHINE: $DEV_MACHINE_STAGING
+    TARGET_SSH_KEY_VAR: SSH_STAGING_PRIVATE_KEY
+    DEPLOY_PATH: /home/techteam/portainer/akademik-be
+    ENV_FILE_PATH: /home/techteam/portainer/akademik-be/.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+    - when: never
+
+# ========================
+# DEPLOY JOB - PROD
+# ========================
+deploy_main:
+  extends: .deploy_template
+  variables:
+    TARGET_MACHINE: $DEV_MACHINE_PROD
+    TARGET_SSH_KEY_VAR: SSH_PROD_PRIVATE_KEY
+    DEPLOY_PATH: /home/techteam/env/akademik-be
+    ENV_FILE_PATH: /home/techteam/env/akademik-be/.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
