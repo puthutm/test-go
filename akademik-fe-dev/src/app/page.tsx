@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import {
   Card,
   CardBody,
@@ -18,7 +17,6 @@ import {
 import { MAHASISWA, AKADEMIK, KAPRODI, DOSEN } from "@/lib/constants/role";
 
 export default function Home() {
-  const router = useRouter();
   const [username, setUsername] = useState("200101001");
   const [password, setPassword] = useState("password123");
   const [role, setRole] = useState<string>(MAHASISWA);
@@ -53,11 +51,7 @@ export default function Home() {
         });
 
         if (res?.ok) {
-          if (role === MAHASISWA) {
-            router.push("/student");
-          } else {
-            router.push("/dashboard");
-          }
+          window.location.href = role === MAHASISWA ? "/student" : "/dashboard";
         } else {
           setErrorMsg("Login gagal. Silakan periksa kembali username & password.");
         }
@@ -121,7 +115,7 @@ export default function Home() {
 
           <div className="mb-4">
             <Label className="small text-muted fw-medium d-block text-center mb-2" style={{ fontSize: "11px" }}>
-              PILIK SEEDER AKUN DEMO (QUICK LOGIN)
+              PILIH SEEDER AKUN DEMO (QUICK LOGIN)
             </Label>
             <div className="d-flex flex-wrap gap-1 justify-content-center">
               <Button
