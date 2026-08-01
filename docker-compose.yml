@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ==========================================
   # Database Service 1: Akademik DB
@@ -87,8 +85,6 @@ services:
     restart: always
     ports:
       - "${DATA_REFERENSI_BE_PORT:-3000}:3000"
-    env_file:
-      - ./data-referensi-be-dev/data-referensi-be-dev/.env
     environment:
       DB_HOST: postgres-data-referensi
       DB_PORT: 5432
@@ -96,6 +92,7 @@ services:
       DB_PASSWORD: ${DATA_REFERENSI_DB_PASS:-postgres}
       DB_NAME: ${DATA_REFERENSI_DB_NAME:-data_referensi_db}
       PORT: 3000
+      JWT_PUBLIC_KEY_PATH: public_key.pem
     depends_on:
       postgres-data-referensi:
         condition: service_healthy
@@ -111,18 +108,37 @@ services:
     restart: always
     ports:
       - "${AKADEMIK_BE_PORT:-8080}:8080"
-    env_file:
-      - ./akademik-be-dev/.env
     environment:
+      APP_NAME: "akademic_be"
+      APP_DEBUG: "true"
       DB_HOST: postgres-akademik
       DB_PORT: 5432
       DB_USER: ${AKADEMIK_DB_USER:-postgres}
       DB_PASS: ${AKADEMIK_DB_PASS:-postgres}
       DB_NAME: ${AKADEMIK_DB_NAME:-akademik_db}
-      REDIS_HOST: redis:6379
-      SERVER_HOST: 0.0.0.0
+      DB_POOL_IDLE: 10
+      DB_POOL_MAX: 100
+      DB_POOL_LIFETIME: 300
+      SERVER_HOST: "0.0.0.0"
       SERVER_PORT: 8080
+      SERVER_PREFORK: "false"
+      JWT_PUBLIC_KEY_PATH: public_key.pem
+      LOGGER_LEVEL: 6
+      MINIO_ENDPOINT_URL: ${HOST_IP:-10.10.20.56}
+      MINIO_ENDPOINT_PORT: 9000
+      MINIO_ACCESS_KEY_ID: minioadmin
+      MINIO_SECRET_ACCESS_KEY: minioadmin
+      USE_SSL: "false"
+      BUCKET_NAME: akademik-be
+      MAX_SIZE_FILE: 5
+      REDIS_HOST: redis:6379
+      REDIS_PASS: ""
+      REDIS_DB: 0
+      INTERNAL_API_KEY: dev-api-key
+      INTERNAL_BASE_URL_SSO: http://${HOST_IP:-10.10.20.56}:8000
+      INTERNAL_BASE_URL_SDM: http://${HOST_IP:-10.10.20.56}:8001
       INTERNAL_BASE_URL_DATAREFERENSI: http://data-referensi-be:3000
+      INTERNAL_ACADEMIC_PERIOD_ENDPOINT_PATH: "/api/internal/pmb/academic-periods/%s"
     depends_on:
       postgres-akademik:
         condition: service_healthy
@@ -141,6 +157,7 @@ services:
     ports:
       - "${AKADEMIK_FE_PORT:-3001}:3000"
     environment:
+      NEXTAUTH_SECRET: unsiasupersecretkey1234567890!
       NEXTAUTH_URL: http://${HOST_IP:-10.10.20.56}:${AKADEMIK_FE_PORT:-3001}
       NEXT_PUBLIC_API_BASE_URL: http://${HOST_IP:-10.10.20.56}:${AKADEMIK_BE_PORT:-8080}
       NEXT_PUBLIC_API_DATA_REFERENSI_URL: http://${HOST_IP:-10.10.20.56}:${DATA_REFERENSI_BE_PORT:-3000}
