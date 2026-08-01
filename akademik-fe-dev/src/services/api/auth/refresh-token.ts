@@ -51,6 +51,7 @@ export const getRefreshAccessToken = async (token: any) => {
     };
     return user;
   } catch (error: any) {
+    console.error("Refresh token error:", error);
     return {
       ...token,
       expiredIn: Date.now() + 3600 * 24 * 1000,

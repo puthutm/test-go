@@ -3,6 +3,7 @@
 import NextError from "next/error";
 
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
+  console.error("Global error caught:", error);
   return (
     <html>
       <body>
