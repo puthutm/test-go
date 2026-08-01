@@ -8,7 +8,11 @@ export const getSidebarMenu = async (): Promise<ApiResponse<SidebarMenu[]>> => {
 
     return response;
   } catch (error: any) {
-    console.log(error?.message || "Something went wrong");
-    throw new Error(error);
+    console.log("Error fetching sidebar menu:", error?.message || "Something went wrong");
+    return {
+      error: true,
+      data: [],
+      message: error?.message || "Failed to load sidebar menu",
+    } as any;
   }
 };

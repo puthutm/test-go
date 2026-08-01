@@ -49,7 +49,6 @@ const Sidebar = () => {
   }, []);
 
   const addEventListenerOnSmHoverMenu = () => {
-    // add listener Sidebar Hover icon on change layout from setting
     if (
       document.documentElement.getAttribute("data-sidebar-size") === "sm-hover"
     ) {
@@ -77,7 +76,6 @@ const Sidebar = () => {
   useEffect(() => {
     const findActivePath = (items: any[]): string | undefined => {
       for (const item of items) {
-        // Match the path or any child's path
         if (item.path && pathName.startsWith(item.path)) {
           if (item.children) {
             const activeChild = item.children.find((child: any) =>
@@ -106,7 +104,7 @@ const Sidebar = () => {
 
   useEffect(() => {
     const verticalOverlay = document.getElementsByClassName("vertical-overlay");
-    if (verticalOverlay) {
+    if (verticalOverlay && verticalOverlay[0]) {
       verticalOverlay[0].addEventListener("click", function () {
         document.body.classList.remove("vertical-sidebar-enable");
       });

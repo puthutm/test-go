@@ -53,7 +53,7 @@ export const fetchApiSso = async (
   const session = await getServerSession(authOptions);
   const token = session?.user?.token;
 
-  const base = process.env.NEXT_PUBLIC_API_SSO_URL || "http://10.10.20.56:8000";
+  const base = process.env.NEXT_PUBLIC_API_SSO_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://10.10.20.56:8080";
   const baseUrl = `${base.replace(/\/$/, "")}/api`;
   const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
@@ -129,7 +129,7 @@ export const fetchApiSdm = async (
   const session = await getServerSession(authOptions);
   const token = session?.user?.token;
 
-  const base = process.env.NEXT_PUBLIC_API_SDM_URL || "http://10.10.20.56:8001";
+  const base = process.env.NEXT_PUBLIC_API_SDM_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://10.10.20.56:8080";
   const baseUrl = `${base.replace(/\/$/, "")}/api`;
   const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
