@@ -1,0 +1,157 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Database Service 1: Akademik DB
+  # ==========================================
+  postgres-akademik:
+    image: postgres:15-alpine
+    container_name: postgres_akademik
+    restart: always
+    environment:
+      POSTGRES_USER: ${AKADEMIK_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${AKADEMIK_DB_PASS:-postgres}
+      POSTGRES_DB: ${AKADEMIK_DB_NAME:-akademik_db}
+    ports:
+      - "${AKADEMIK_DB_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres_akademik_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AKADEMIK_DB_USER:-postgres} -d ${AKADEMIK_DB_NAME:-akademik_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Database Service 2: Data Referensi DB
+  # ==========================================
+  postgres-data-referensi:
+    image: postgres:15-alpine
+    container_name: postgres_data_referensi
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATA_REFERENSI_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATA_REFERENSI_DB_PASS:-postgres}
+      POSTGRES_DB: ${DATA_REFERENSI_DB_NAME:-data_referensi_db}
+    ports:
+      - "${DATA_REFERENSI_DB_HOST_PORT:-5433}:5432"
+    volumes:
+      - postgres_data_referensi_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATA_REFERENSI_DB_USER:-postgres} -d ${DATA_REFERENSI_DB_NAME:-data_referensi_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Redis Cache
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: akademik_redis
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Database Management GUI (pgAdmin)
+  # ==========================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: akademik_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - postgres-akademik
+      - postgres-data-referensi
+
+  # ==========================================
+  # Backend Service 1: Data Referensi BE
+  # ==========================================
+  data-referensi-be:
+    build:
+      context: ./data-referensi-be-dev/data-referensi-be-dev
+      dockerfile: Dockerfile
+    container_name: data_referensi_be
+    restart: always
+    ports:
+      - "${DATA_REFERENSI_BE_PORT:-3000}:3000"
+    env_file:
+      - ./data-referensi-be-dev/data-referensi-be-dev/.env
+    environment:
+      DB_HOST: postgres-data-referensi
+      DB_PORT: 5432
+      DB_USERNAME: ${DATA_REFERENSI_DB_USER:-postgres}
+      DB_PASSWORD: ${DATA_REFERENSI_DB_PASS:-postgres}
+      DB_NAME: ${DATA_REFERENSI_DB_NAME:-data_referensi_db}
+      PORT: 3000
+    depends_on:
+      postgres-data-referensi:
+        condition: service_healthy
+
+  # ==========================================
+  # Backend Service 2: Akademik BE
+  # ==========================================
+  akademik-be:
+    build:
+      context: ./akademik-be-dev
+      dockerfile: Dockerfile
+    container_name: akademik_be
+    restart: always
+    ports:
+      - "${AKADEMIK_BE_PORT:-8080}:8080"
+    env_file:
+      - ./akademik-be-dev/.env
+    environment:
+      DB_HOST: postgres-akademik
+      DB_PORT: 5432
+      DB_USER: ${AKADEMIK_DB_USER:-postgres}
+      DB_PASS: ${AKADEMIK_DB_PASS:-postgres}
+      DB_NAME: ${AKADEMIK_DB_NAME:-akademik_db}
+      REDIS_HOST: redis:6379
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8080
+      INTERNAL_BASE_URL_DATAREFERENSI: http://data-referensi-be:3000
+    depends_on:
+      postgres-akademik:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ==========================================
+  # Frontend Service: Akademik FE
+  # ==========================================
+  akademik-fe:
+    build:
+      context: ./akademik-fe-dev
+      dockerfile: Dockerfile
+    container_name: akademik_fe
+    restart: always
+    ports:
+      - "${AKADEMIK_FE_PORT:-3001}:3000"
+    environment:
+      NEXTAUTH_URL: http://${HOST_IP:-10.10.20.56}:${AKADEMIK_FE_PORT:-3001}
+      NEXT_PUBLIC_API_BASE_URL: http://${HOST_IP:-10.10.20.56}:${AKADEMIK_BE_PORT:-8080}
+      NEXT_PUBLIC_API_DATA_REFERENSI_URL: http://${HOST_IP:-10.10.20.56}:${DATA_REFERENSI_BE_PORT:-3000}
+      NEXT_PUBLIC_UI_SSO_URL: http://${HOST_IP:-10.10.20.56}:${DATA_REFERENSI_BE_PORT:-3000}
+    depends_on:
+      - akademik-be
+
+volumes:
+  postgres_akademik_data:
+    driver: local
+  postgres_data_referensi_data:
+    driver: local
+  redis_data:
+    driver: local

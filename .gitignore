@@ -1,0 +1,35 @@
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build & Binaries
+main
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+dist/
+build/
+.next/
+node_modules/
+
+# Docker persistent data
+postgres_data/
+postgres_akademik_data/
+postgres_data_referensi_data/
+redis_data/
