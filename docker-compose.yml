@@ -152,6 +152,12 @@ services:
     build:
       context: ./akademik-fe-dev
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://${HOST_IP:-10.10.20.56}:${AKADEMIK_BE_PORT:-8080}
+        NEXT_PUBLIC_API_DATA_REFERENSI_URL: http://${HOST_IP:-10.10.20.56}:${DATA_REFERENSI_BE_PORT:-3000}
+        NEXT_PUBLIC_API_SSO_URL: http://${HOST_IP:-10.10.20.56}:8000
+        NEXT_PUBLIC_API_SDM_URL: http://${HOST_IP:-10.10.20.56}:8001
+        NEXT_PUBLIC_UI_SSO_URL: http://${HOST_IP:-10.10.20.56}:${DATA_REFERENSI_BE_PORT:-3000}
     container_name: akademik_fe
     restart: always
     ports:
@@ -161,6 +167,8 @@ services:
       NEXTAUTH_URL: http://${HOST_IP:-10.10.20.56}:${AKADEMIK_FE_PORT:-3001}
       NEXT_PUBLIC_API_BASE_URL: http://${HOST_IP:-10.10.20.56}:${AKADEMIK_BE_PORT:-8080}
       NEXT_PUBLIC_API_DATA_REFERENSI_URL: http://${HOST_IP:-10.10.20.56}:${DATA_REFERENSI_BE_PORT:-3000}
+      NEXT_PUBLIC_API_SSO_URL: http://${HOST_IP:-10.10.20.56}:8000
+      NEXT_PUBLIC_API_SDM_URL: http://${HOST_IP:-10.10.20.56}:8001
       NEXT_PUBLIC_UI_SSO_URL: http://${HOST_IP:-10.10.20.56}:${DATA_REFERENSI_BE_PORT:-3000}
     depends_on:
       - akademik-be

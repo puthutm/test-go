@@ -3,7 +3,6 @@
 import { getServerSession } from "next-auth";
 
 import authOptions from "@/config/next-auth";
-// import { serverLogger } from "../server-logger";
 
 interface FetchApiOptions extends RequestInit {
   cacheType?: RequestCache;
@@ -16,21 +15,9 @@ export const fetchApi = async (
   const session = await getServerSession(authOptions);
   const token = session?.user?.token;
 
-  const baseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  const url = `${baseUrl}${endpoint}`;
-  // const startTime = Date.now();
-  // const method = (options.method || "GET").toUpperCase();
-  // const requestId = Math.random().toString(36).substring(7);
-
-  // Log request start
-  // serverLogger.info(`Server API call: ${method} ${endpoint}`, {
-  //   requestId,
-  //   method,
-  //   endpoint,
-  //   url,
-  //   hasAuth: !!token,
-  //   userId: session?.user?.id,
-  // });
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://10.10.20.56:8080";
+  const baseUrl = `${base.replace(/\/$/, "")}/api`;
+  const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   try {
     const response = await fetch(url, {
@@ -42,24 +29,7 @@ export const fetchApi = async (
       },
     });
 
-    // const duration = Date.now() - startTime;
-
-    // Log API call metrics
-    // serverLogger.apiCall({
-    //   url: endpoint,
-    //   method,
-    //   status: response.status,
-    //   duration,
-    //   requestId,
-    //   userId: session?.user?.id || undefined,
-    // });
-
     if (response.status === 401) {
-      // serverLogger.warn(`Unauthorized API call: ${method} ${endpoint}`, {
-      //   requestId,
-      //   status: 401,
-      //   duration,
-      // });
       return {
         error: true,
         data: "",
@@ -69,27 +39,10 @@ export const fetchApi = async (
     }
 
     const result = await response.json();
-
-    // serverLogger.info(`Server API call completed: ${method} ${endpoint}`, {
-    //   requestId,
-    //   status: response.status,
-    //   duration,
-    //   success: response.ok,
-    // });
-
     return result;
   } catch (error: any) {
-    // const duration = Date.now() - startTime;
-
-    // serverLogger.error(`Server API call failed: ${method} ${endpoint}`, error, {
-    //   requestId,
-    //   duration,
-    //   url,
-    //   userId: session?.user?.id || undefined,
-    // });
-
-    console.error("Fetch error:", error);
-    throw new Error(error?.message || "Something went wrong");
+    console.error("fetchApi error:", error);
+    return { error: true, data: null, message: error?.message || "Service error" };
   }
 };
 
@@ -100,20 +53,9 @@ export const fetchApiSso = async (
   const session = await getServerSession(authOptions);
   const token = session?.user?.token;
 
-  const baseUrl = `${process.env.NEXT_PUBLIC_API_SSO_URL}/api`;
-  const url = `${baseUrl}${endpoint}`;
-  // const startTime = Date.now();
-  // const method = (options.method || "GET").toUpperCase();
-  // const requestId = Math.random().toString(36).substring(7);
-
-  // serverLogger.info(`Server SSO API call: ${method} ${endpoint}`, {
-  //   requestId,
-  //   method,
-  //   endpoint,
-  //   url,
-  //   hasAuth: !!token,
-  //   userId: session?.user?.id,
-  // });
+  const base = process.env.NEXT_PUBLIC_API_SSO_URL || "http://10.10.20.56:8000";
+  const baseUrl = `${base.replace(/\/$/, "")}/api`;
+  const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   try {
     const response = await fetch(url, {
@@ -125,23 +67,7 @@ export const fetchApiSso = async (
       },
     });
 
-    // const duration = Date.now() - startTime;
-
-    // serverLogger.apiCall({
-    //   url: endpoint,
-    //   method,
-    //   status: response.status,
-    //   duration,
-    //   requestId,
-    //   userId: session?.user?.id || undefined,
-    // });
-
     if (response.status === 401) {
-      // serverLogger.warn(`Unauthorized SSO API call: ${method} ${endpoint}`, {
-      //   requestId,
-      //   status: 401,
-      //   duration,
-      // });
       return {
         error: true,
         data: "",
@@ -151,27 +77,10 @@ export const fetchApiSso = async (
     }
 
     const result = await response.json();
-
-    // serverLogger.info(`Server SSO API call completed: ${method} ${endpoint}`, {
-    //   requestId,
-    //   status: response.status,
-    //   duration,
-    //   success: response.ok,
-    // });
-
     return result;
   } catch (error: any) {
-    // const duration = Date.now() - startTime;
-
-    // serverLogger.error(`Server SSO API call failed: ${method} ${endpoint}`, error, {
-    //   requestId,
-    //   duration,
-    //   url,
-    //   userId: session?.user?.id || undefined,
-    // });
-
-    console.error("Fetch error:", error);
-    throw new Error(error?.message || "Something went wrong");
+    console.error("fetchApiSso error:", error);
+    return { error: true, data: [], message: error?.message || "SSO service unavailable" };
   }
 };
 
@@ -182,20 +91,9 @@ export const fetchApiDatareferensi = async (
   const session = await getServerSession(authOptions);
   const token = session?.user?.token;
 
-  const baseUrl = `${process.env.NEXT_PUBLIC_API_DATA_REFERENSI_URL}/api`;
-  const url = `${baseUrl}${endpoint}`;
-  // const startTime = Date.now();
-  // const method = (options.method || "GET").toUpperCase();
-  // const requestId = Math.random().toString(36).substring(7);
-
-  // serverLogger.info(`Server DataRef API call: ${method} ${endpoint}`, {
-  //   requestId,
-  //   method,
-  //   endpoint,
-  //   url,
-  //   hasAuth: !!token,
-  //   userId: session?.user?.id,
-  // });
+  const base = process.env.NEXT_PUBLIC_API_DATA_REFERENSI_URL || "http://10.10.20.56:3000";
+  const baseUrl = `${base.replace(/\/$/, "")}/api`;
+  const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   try {
     const response = await fetch(url, {
@@ -207,23 +105,7 @@ export const fetchApiDatareferensi = async (
       },
     });
 
-    // const duration = Date.now() - startTime;
-
-    // serverLogger.apiCall({
-    //   url: endpoint,
-    //   method,
-    //   status: response.status,
-    //   duration,
-    //   requestId,
-    //   userId: session?.user?.id || undefined,
-    // });
-
     if (response.status === 401) {
-      // serverLogger.warn(`Unauthorized DataRef API call: ${method} ${endpoint}`, {
-      //   requestId,
-      //   status: 401,
-      //   duration,
-      // });
       return {
         error: true,
         data: "",
@@ -233,27 +115,10 @@ export const fetchApiDatareferensi = async (
     }
 
     const result = await response.json();
-
-    // serverLogger.info(`Server DataRef API call completed: ${method} ${endpoint}`, {
-    //   requestId,
-    //   status: response.status,
-    //   duration,
-    //   success: response.ok,
-    // });
-
     return result;
   } catch (error: any) {
-    // const duration = Date.now() - startTime;
-
-    // serverLogger.error(`Server DataRef API call failed: ${method} ${endpoint}`, error, {
-    //   requestId,
-    //   duration,
-    //   url,
-    //   userId: session?.user?.id || undefined,
-    // });
-
-    console.error("Fetch error:", error);
-    throw new Error(error?.message || "Something went wrong");
+    console.error("fetchApiDatareferensi error:", error);
+    return { error: true, data: null, message: error?.message || "Data Referensi error" };
   }
 };
 
@@ -264,20 +129,9 @@ export const fetchApiSdm = async (
   const session = await getServerSession(authOptions);
   const token = session?.user?.token;
 
-  const baseUrl = `${process.env.NEXT_PUBLIC_API_SDM_URL}/api`;
-  const url = `${baseUrl}${endpoint}`;
-  // const startTime = Date.now();
-  // const method = (options.method || "GET").toUpperCase();
-  // const requestId = Math.random().toString(36).substring(7);
-
-  // serverLogger.info(`Server SDM API call: ${method} ${endpoint}`, {
-  //   requestId,
-  //   method,
-  //   endpoint,
-  //   url,
-  //   hasAuth: !!token,
-  //   userId: session?.user?.id,
-  // });
+  const base = process.env.NEXT_PUBLIC_API_SDM_URL || "http://10.10.20.56:8001";
+  const baseUrl = `${base.replace(/\/$/, "")}/api`;
+  const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   try {
     const response = await fetch(url, {
@@ -289,23 +143,7 @@ export const fetchApiSdm = async (
       },
     });
 
-    // const duration = Date.now() - startTime;
-
-    // serverLogger.apiCall({
-    //   url: endpoint,
-    //   method,
-    //   status: response.status,
-    //   duration,
-    //   requestId,
-    //   userId: session?.user?.id || undefined,
-    // });
-
     if (response.status === 401) {
-      // serverLogger.warn(`Unauthorized SDM API call: ${method} ${endpoint}`, {
-      //   requestId,
-      //   status: 401,
-      //   duration,
-      // });
       return {
         error: true,
         data: "",
@@ -315,26 +153,9 @@ export const fetchApiSdm = async (
     }
 
     const result = await response.json();
-
-    // serverLogger.info(`Server SDM API call completed: ${method} ${endpoint}`, {
-    //   requestId,
-    //   status: response.status,
-    //   duration,
-    //   success: response.ok,
-    // });
-
     return result;
   } catch (error: any) {
-    // const duration = Date.now() - startTime;
-
-    // serverLogger.error(`Server SDM API call failed: ${method} ${endpoint}`, error, {
-    //   requestId,
-    //   duration,
-    //   url,
-    //   userId: session?.user?.id || undefined,
-    // });
-
-    console.error("Fetch error:", error);
-    throw new Error(error?.message || "Something went wrong");
+    console.error("fetchApiSdm error:", error);
+    return { error: true, data: null, message: error?.message || "SDM service error" };
   }
 };
