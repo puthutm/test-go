@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import * as Sentry from "@sentry/nextjs";
-// import { FaroProvider } from "@/components/faro-provider";
 
 import authOptions from "@/config/next-auth";
 import { metadataConfig } from "@/config/metadata";
@@ -29,9 +27,6 @@ const poppins = Poppins({
 export function generateMetadata(): Metadata {
   return {
     ...metadataConfig,
-    other: {
-      ...Sentry.getTraceData(),
-    },
   };
 }
 
@@ -57,7 +52,6 @@ export default async function RootLayout({
     >
       <body suppressHydrationWarning className={poppins.className}>
         <AuthProvider session={session as Session}>
-          {/* <FaroProvider> */}
           <QueryProvider>
             <LexicalProvider>
               <ToolbarContext>
@@ -71,7 +65,6 @@ export default async function RootLayout({
               </ToolbarContext>
             </LexicalProvider>
           </QueryProvider>
-          {/* </FaroProvider> */}
         </AuthProvider>
       </body>
     </html>

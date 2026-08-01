@@ -1,8 +1,18 @@
 import { redirect } from "next/navigation";
-
 import { decodeJWT } from "@/lib/utils/jwt-decode";
 
 export const getRefreshAccessToken = async (token: any) => {
+  if (
+    !token?.refreshToken ||
+    token?.refreshToken === "local-dummy-refresh-token" ||
+    token?.token === "local-dummy-token"
+  ) {
+    return {
+      ...token,
+      expiredIn: Date.now() + 3600 * 24 * 1000,
+    };
+  }
+
   const req = {
     refresh_token: token?.refreshToken,
     role_spesifik: token?.role_name,
@@ -23,7 +33,6 @@ export const getRefreshAccessToken = async (token: any) => {
 
     const response = await api.json();
 
-    // if autorize logout
     if (response.status === 401 || response.data === null) {
       redirect(process.env.NEXT_PUBLIC_UI_SSO_URL as string);
     }
@@ -42,6 +51,9 @@ export const getRefreshAccessToken = async (token: any) => {
     };
     return user;
   } catch (error: any) {
-    throw new Error(error?.response?.data?.message);
+    return {
+      ...token,
+      expiredIn: Date.now() + 3600 * 24 * 1000,
+    };
   }
 };

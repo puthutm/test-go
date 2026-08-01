@@ -1,51 +1,37 @@
 import { getToken } from "next-auth/jwt";
-import { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { MAHASISWA } from "./lib/constants/role";
 
 const middleware = async (request: NextRequest) => {
-  const sessionCookie =
-    process.env.NODE_ENV === "development"
-      ? request.cookies.get("next-auth.session-token")
-      : request.cookies.get("__Secure-next-auth.session-token");
-
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  const isAuthenticated = !!token;
   const role = token?.role_name;
-
   const path = request.nextUrl.pathname;
 
-  if (sessionCookie && path === "/" && role === MAHASISWA) {
-    return NextResponse.redirect(new URL("/student", request.url));
-  }
-
-  if (sessionCookie && path === "/dashboard" && role === MAHASISWA) {
-    return NextResponse.redirect(new URL("/student", request.url));
-  }
-
-  if (sessionCookie && path === "/") {
+  if (isAuthenticated && path === "/") {
+    if (role === MAHASISWA) {
+      return NextResponse.redirect(new URL("/student", request.url));
+    }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (!sessionCookie && path === "/") {
-    return NextResponse.next();
+  if (isAuthenticated && path === "/dashboard" && role === MAHASISWA) {
+    return NextResponse.redirect(new URL("/student", request.url));
   }
 
-  if (!sessionCookie && path !== "/") {
+  if (!isAuthenticated && path !== "/") {
     return NextResponse.redirect(new URL("/", request.url));
   }
-
-  //
 
   return NextResponse.next();
 };
 
 export default middleware;
 
-// ignore middleware
 export const config = {
   matcher: [
     "/((?!api/auth|api|metrics|_next/static|_next/image|manifest.webmanifest|favicon.ico|sitemap.xml|robots.txt|.*\\.png|.*\\.jpg|.*\\.jpeg$).*)",
