@@ -5,15 +5,6 @@ WORKDIR /app
 
 RUN apk add --no-cache git
 
-# Private repo config
-ENV GOPRIVATE=gitlab.unsia.ac.id
-RUN git config --global url."https://gitlab.unsia.ac.id/".insteadOf "https://gitlab.unsia.ac.id/"
-
-ARG NETRC_FILE=.netrc
-RUN touch /root/.netrc
-COPY ${NETRC_FILE}* /root/.netrc
-RUN chmod 600 /root/.netrc
-
 COPY go.mod go.sum ./
 RUN go mod download
 
@@ -23,7 +14,6 @@ COPY . .
 RUN touch .env public_key.pem
 
 RUN go build -o main ./cmd/akademic
-RUN rm -f /root/.netrc
 
 # Step 2: Runtime
 FROM alpine:latest

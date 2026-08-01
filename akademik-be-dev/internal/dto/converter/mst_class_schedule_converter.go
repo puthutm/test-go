@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	utilicems "gitlab.unsia.ac.id/icems/icems-tools/utils"
+	utilicems "unsia.ac.id/akademic_be/pkg/icems-tools/utils"
 	"unsia.ac.id/akademic_be/internal/dto"
 	"unsia.ac.id/akademic_be/internal/model"
 	"unsia.ac.id/akademic_be/internal/service/command"

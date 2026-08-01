@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	icemstutil "gitlab.unsia.ac.id/icems/icems-tools/utils"
+	icemstutil "unsia.ac.id/akademic_be/pkg/icems-tools/utils"
 	"gorm.io/gorm"
 	"unsia.ac.id/akademic_be/internal/delivery/http/middleware"
 	"unsia.ac.id/akademic_be/internal/dto"

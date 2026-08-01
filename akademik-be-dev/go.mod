@@ -14,8 +14,6 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
-	gitlab.unsia.ac.id/icems/icems-tools v0.0.89
-	gitlab.unsia.ac.id/icems/storage-library-be v0.0.22
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 )

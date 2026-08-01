@@ -2,8 +2,8 @@ package repositorymodel
 
 import (
 	"github.com/sirupsen/logrus"
-	"gitlab.unsia.ac.id/icems/storage-library-be/folders"
-	medialibrary "gitlab.unsia.ac.id/icems/storage-library-be/media_library"
+	"unsia.ac.id/akademic_be/pkg/storage-library-be/folders"
+	medialibrary "unsia.ac.id/akademic_be/pkg/storage-library-be/media_library"
 	"gorm.io/gorm"
 	msg "unsia.ac.id/akademic_be/internal/config/message"
 	"unsia.ac.id/akademic_be/internal/repository/cached"

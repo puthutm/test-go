@@ -177,10 +177,7 @@ github.com/valyala/fasthttp v1.51.0 h1:8b30A5JlZ6C7AS81RsWjYMQmrZG6feChmgAolCl1S
 github.com/valyala/fasthttp v1.51.0/go.mod h1:oI2XroL+lI7vdXyYoQk03bXBThfFl2cVdIA3Xl7cH8g=
 github.com/valyala/tcplisten v1.0.0 h1:rBHj/Xf+E1tRGZyWIWwJDiRY0zc1Js+CV5DqwacVSA8=
 github.com/valyala/tcplisten v1.0.0/go.mod h1:T0xQ8SeCZGxckz9qRXTfG43PvQ/mcWh7FwZEA7Ioqkc=
-gitlab.unsia.ac.id/icems/icems-tools v0.0.89 h1:NWnZUBZeaiHMxSUdUp87ryCGhLN8YkIDyXr1dFu1PfM=
-gitlab.unsia.ac.id/icems/icems-tools v0.0.89/go.mod h1:ji6Jm3IhXFKMOXnOQX5bAVqTLZVaWk4xC8KuPLk0/fA=
-gitlab.unsia.ac.id/icems/storage-library-be v0.0.22 h1:O/TU+kEnX64DIttPgWt9F1JqtIehPY3En5Vrkk4N1Mk=
-gitlab.unsia.ac.id/icems/storage-library-be v0.0.22/go.mod h1:+PDBk8erqcIhKFICLxYcYaM7Uh9wQQit/GkrDGNew7w=
+
 go.uber.org/atomic v1.9.0 h1:ECmE8Bn/WFTYwEW/bpKD3M8VtR/zQVbavAoalC1PYyE=
 go.uber.org/atomic v1.9.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=

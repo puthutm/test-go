@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
-	"gitlab.unsia.ac.id/icems/storage-library-be/folders"
+	"unsia.ac.id/akademic_be/pkg/storage-library-be/folders"
 	msg "unsia.ac.id/akademic_be/internal/config/message"
 	"unsia.ac.id/akademic_be/internal/dto"
 	servicemodel "unsia.ac.id/akademic_be/internal/service/model"

@@ -6,9 +6,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
-	modelsdm "gitlab.unsia.ac.id/icems/icems-tools/gateway/model/sdm"
-	restapisdm "gitlab.unsia.ac.id/icems/icems-tools/gateway/rest-api/sdm"
-	utilicems "gitlab.unsia.ac.id/icems/icems-tools/utils"
+	modelsdm "unsia.ac.id/akademic_be/pkg/icems-tools/gateway/model/sdm"
+	restapisdm "unsia.ac.id/akademic_be/pkg/icems-tools/gateway/rest-api/sdm"
+	utilicems "unsia.ac.id/akademic_be/pkg/icems-tools/utils"
 	"gorm.io/gorm"
 	"unsia.ac.id/akademic_be/internal/delivery/http/middleware"
 	"unsia.ac.id/akademic_be/internal/dto"

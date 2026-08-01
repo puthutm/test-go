@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/sirupsen/logrus"
-	"gitlab.unsia.ac.id/icems/storage-library-be/folders"
-	medialibrary "gitlab.unsia.ac.id/icems/storage-library-be/media_library"
+	"unsia.ac.id/akademic_be/pkg/storage-library-be/folders"
+	medialibrary "unsia.ac.id/akademic_be/pkg/storage-library-be/media_library"
 	"gorm.io/gorm"
 	"unsia.ac.id/akademic_be/internal/repository/cached"
 	repositorymodel "unsia.ac.id/akademic_be/internal/repository/model"

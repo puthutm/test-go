@@ -6,8 +6,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
-	modelsso "gitlab.unsia.ac.id/icems/icems-tools/gateway/model/sso"
-	restsapi "gitlab.unsia.ac.id/icems/icems-tools/gateway/rest-api/sso"
+	modelsso "unsia.ac.id/akademic_be/pkg/icems-tools/gateway/model/sso"
+	restsapi "unsia.ac.id/akademic_be/pkg/icems-tools/gateway/rest-api/sso"
 	"unsia.ac.id/akademic_be/internal/config"
 	"unsia.ac.id/akademic_be/internal/dto"
 	"unsia.ac.id/akademic_be/internal/repository/cached"

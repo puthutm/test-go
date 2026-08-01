@@ -28,6 +28,10 @@ build/
 .next/
 node_modules/
 
+# Go workspace
+go.work
+go.work.sum
+
 # Docker persistent data
 postgres_data/
 postgres_akademik_data/

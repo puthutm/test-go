@@ -2,7 +2,7 @@ package command
 
 import (
 	"github.com/google/uuid"
-	"gitlab.unsia.ac.id/icems/storage-library-be/folders"
+	"unsia.ac.id/akademic_be/pkg/storage-library-be/folders"
 )
 
 type MstMediaLibraryRequest_GetFileByFolderAndSubject struct {

@@ -7,7 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
-	utilicems "gitlab.unsia.ac.id/icems/icems-tools/utils"
+	utilicems "unsia.ac.id/akademic_be/pkg/icems-tools/utils"
 	msg "unsia.ac.id/akademic_be/internal/config/message"
 	"unsia.ac.id/akademic_be/internal/dto"
 	"unsia.ac.id/akademic_be/internal/dto/pageable"

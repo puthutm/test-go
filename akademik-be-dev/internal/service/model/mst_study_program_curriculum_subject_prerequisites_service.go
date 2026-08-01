@@ -2,7 +2,7 @@ package servicemodel
 
 import (
 	"github.com/sirupsen/logrus"
-	restapisdm "gitlab.unsia.ac.id/icems/icems-tools/gateway/rest-api/sdm"
+	restapisdm "unsia.ac.id/akademic_be/pkg/icems-tools/gateway/rest-api/sdm"
 	"gorm.io/gorm"
 	"unsia.ac.id/akademic_be/internal/repository/cached"
 	repositorymodel "unsia.ac.id/akademic_be/internal/repository/model"
