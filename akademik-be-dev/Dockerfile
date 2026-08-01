@@ -10,22 +10,19 @@ ENV GOPRIVATE=gitlab.unsia.ac.id
 RUN git config --global url."https://gitlab.unsia.ac.id/".insteadOf "https://gitlab.unsia.ac.id/"
 
 ARG NETRC_FILE=.netrc
-COPY ${NETRC_FILE} /root/.netrc
+RUN touch /root/.netrc
+COPY ${NETRC_FILE}* /root/.netrc
 RUN chmod 600 /root/.netrc
 
-# Copy go mod dulu (biar caching jalan)
 COPY go.mod go.sum ./
-
-# Download dependency dulu
 RUN go mod download
 
-# Baru copy source
 COPY . .
 
-# Build binary
-RUN go build -o main ./cmd/akademic
+# Ensure .env and public_key.pem exist so stage 2 COPY never fails
+RUN touch .env public_key.pem
 
-# Cleanup credential
+RUN go build -o main ./cmd/akademic
 RUN rm -f /root/.netrc
 
 # Step 2: Runtime
@@ -34,11 +31,11 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=builder /app/main .
-COPY .env .
-COPY *.pem .
+COPY --from=builder /app/.env .
+COPY --from=builder /app/public_key.pem .
 
 RUN apk add --no-cache bash
 
-EXPOSE 9000
+EXPOSE 8080
 
 CMD ["./main"]

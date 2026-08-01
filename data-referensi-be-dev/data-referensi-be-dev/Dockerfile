@@ -1,48 +1,37 @@
 # Step 1: Build the Go application
-FROM golang:1.23.3-alpine as builder
+FROM golang:1.23-alpine AS builder
 
-# Set the Current Working Directory inside the container
 WORKDIR /app
 
 RUN apk add --no-cache git
 
 ARG NETRC_FILE=.netrc
-
-# Salin file netrc (sementara untuk build)
-COPY ${NETRC_FILE} /root/.netrc
-
-# Amankan file
+RUN touch /root/.netrc
+COPY ${NETRC_FILE}* /root/.netrc
 RUN chmod 600 /root/.netrc
 
-
-# Copy the Go Modules and Sum files
 COPY go.mod go.sum ./
+RUN go mod download
 
-# Download all the dependencies. Dependencies will be cached if the go.mod and go.sum are not changed
-RUN go mod tidy
-
-# Copy the entire source code
 COPY . .
-COPY main.go ./
 
-# Build the Go app
+# Ensure .env and public_key.pem exist so stage 2 COPY never fails
+RUN touch .env public_key.pem
+
 RUN go build -o main .
-
 RUN rm -f /root/.netrc
 
-# Step 2: Create a minimal runtime container
+# Step 2: Runtime
 FROM alpine:latest  
 
-# Set the Current Working Directory inside the container
 WORKDIR /root/
 
-# Copy the compiled binary from the builder stage
 COPY --from=builder /app/main .
-COPY .env .
-COPY *.pem .
-# Expose port 8080 (or whatever port your app runs on)
+COPY --from=builder /app/.env .
+COPY --from=builder /app/public_key.pem .
+
+RUN apk add --no-cache bash
+
 EXPOSE 3000
 
-# Command to run the executable
-CMD ["/bin/sh", "-c", "apk update && apk add bash"]
 CMD ["./main"]
