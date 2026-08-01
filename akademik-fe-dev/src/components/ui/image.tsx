@@ -20,9 +20,21 @@ export const ImageComponent = ({
   width,
   className,
 }: ImageComponentProps) => {
-  const { data: image } = useGetFileStorage(src as string);
+  const isStaticOrUrl =
+    !src ||
+    typeof src !== "string" ||
+    src.startsWith("/") ||
+    src.startsWith("http://") ||
+    src.startsWith("https://") ||
+    src.startsWith("data:");
 
-  const url = image ? URL.createObjectURL(image as Blob) : null;
+  const { data: image } = useGetFileStorage(isStaticOrUrl ? "" : (src as string));
+
+  const url = isStaticOrUrl
+    ? (src as string)
+    : image
+    ? URL.createObjectURL(image as Blob)
+    : null;
 
   return (
     <Image
