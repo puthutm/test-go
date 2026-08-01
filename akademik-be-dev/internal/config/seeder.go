@@ -1,8 +1,13 @@
 package config
 
 import (
+	"time"
+
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+
+	"unsia.ac.id/akademic_be/internal/model"
 )
 
 type UserSeederModel struct {
@@ -22,8 +27,23 @@ func RunAutoSeeder(db *gorm.DB, log *logrus.Logger) {
 		return
 	}
 
-	_ = db.AutoMigrate(&UserSeederModel{})
+	// 1. AutoMigrate Database Schemas
+	err := db.AutoMigrate(
+		&UserSeederModel{},
+		&model.MstSubject{},
+		&model.MstClass{},
+		&model.MstClassLecturer{},
+		&model.MstClassParticipant{},
+		&model.MstStudentBio{},
+		&model.MstSksLimit{},
+		&model.MstValueScale{},
+		&model.MstValueComposition{},
+	)
+	if err != nil && log != nil {
+		log.Warnf("AutoMigrate warning: %v", err)
+	}
 
+	// 2. Seed Demo Users
 	demoUsers := []UserSeederModel{
 		{
 			ID:       "user-mahasiswa-01",
@@ -66,6 +86,74 @@ func RunAutoSeeder(db *gorm.DB, log *logrus.Logger) {
 			} else {
 				if log != nil {
 					log.Infof("✨ [AutoSeeder] Berhasil memasukkan akun demo [%s]: %s (%s)", u.Role, u.Name, u.Username)
+				}
+			}
+		}
+	}
+
+	// 3. Seed Demo Sample Subjects if empty
+	var subjectCount int64
+	db.Model(&model.MstSubject{}).Count(&subjectCount)
+	if subjectCount == 0 {
+		now := time.Now().Unix()
+		currYearID := uuid.New()
+		courseTypeID := uuid.New()
+		courseGroupID := uuid.New()
+		fieldStudyID := uuid.New()
+
+		demoSubjects := []model.MstSubject{
+			{
+				ID:               uuid.New(),
+				CurriculumYearID: currYearID,
+				StudyProgramID:   "prodi-if-01",
+				Code:             "IF101",
+				NameID:           "Algoritma dan Pemrograman",
+				NameEN:           "Algorithm and Programming",
+				CourseTypeID:     courseTypeID,
+				CourseGroupID:    courseGroupID,
+				FaceToFaceSKS:    3,
+				TotalSKS:         3,
+				FieldOfStudiesID: fieldStudyID,
+				CreatedAt:        now,
+			},
+			{
+				ID:               uuid.New(),
+				CurriculumYearID: currYearID,
+				StudyProgramID:   "prodi-if-01",
+				Code:             "IF102",
+				NameID:           "Basis Data Lanjut",
+				NameEN:           "Advanced Database",
+				CourseTypeID:     courseTypeID,
+				CourseGroupID:    courseGroupID,
+				FaceToFaceSKS:    3,
+				TotalSKS:         3,
+				FieldOfStudiesID: fieldStudyID,
+				CreatedAt:        now,
+			},
+			{
+				ID:               uuid.New(),
+				CurriculumYearID: currYearID,
+				StudyProgramID:   "prodi-if-01",
+				Code:             "IF103",
+				NameID:           "Pemrograman Web Modern",
+				NameEN:           "Modern Web Programming",
+				CourseTypeID:     courseTypeID,
+				CourseGroupID:    courseGroupID,
+				FaceToFaceSKS:    4,
+				TotalSKS:         4,
+				FieldOfStudiesID: fieldStudyID,
+				CreatedAt:        now,
+			},
+		}
+
+		for _, sbj := range demoSubjects {
+			if err := db.Create(&sbj).Error; err != nil {
+				if log != nil {
+					log.Errorf("⚠️ Gagal seeding sample subject %s: %v", sbj.Code, err)
+				}
+			} else {
+				if log != nil {
+					log.Infof("✨ [AutoSeeder] Berhasil memasukkan mata kuliah demo: %s - %s", sbj.Code, sbj.NameID)
 				}
 			}
 		}
