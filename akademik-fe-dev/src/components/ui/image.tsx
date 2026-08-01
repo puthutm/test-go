@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Image, { StaticImageData } from "next/image";
 
 import { useGetFileStorage } from "@/services/api/sso/file-storage";
@@ -28,13 +29,26 @@ export const ImageComponent = ({
     src.startsWith("data:");
 
   const { data: image } = useGetFileStorage(isStaticOrUrl ? "" : (src as string));
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (image && typeof window !== "undefined") {
+      try {
+        const objectUrl = URL.createObjectURL(image as Blob);
+        setBlobUrl(objectUrl);
+        return () => {
+          URL.revokeObjectURL(objectUrl);
+        };
+      } catch (err) {
+        console.error("Error creating Blob URL:", err);
+      }
+    }
+  }, [image]);
 
   const finalSrc = src
     ? isStaticOrUrl
       ? src
-      : image
-      ? URL.createObjectURL(image as Blob)
-      : defaultUser
+      : blobUrl || defaultUser
     : defaultUser;
 
   return (
